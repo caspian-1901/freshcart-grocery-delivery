@@ -1,0 +1,68 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: grocery-delivery
+
+  # Default (dev) profile runs on an in-memory H2 database so the project
+  # starts with zero setup. Run with -Dspring-boot.run.profiles=postgres
+  # (or SPRING_PROFILES_ACTIVE=postgres) to use the real PostgreSQL instance.
+  datasource:
+    url: jdbc:h2:mem:grocery;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+
+app:
+  jwt:
+    # Override in production via APP_JWT_SECRET.
+    secret: ${APP_JWT_SECRET:0f4c9a2b7d8e1f3a5c6b9d2e4f7a1c3b5d8e0f2a4c6b9d1e3f5a7c9b2d4e6f80}
+    # Short-lived tokens: the checkout flow explicitly handles expiry (Week 4).
+    expiry-minutes: ${APP_JWT_EXPIRY_MINUTES:60}
+  cors:
+    allowed-origins: ${APP_CORS_ORIGINS:http://localhost:5173}
+  payment:
+    # Week 3: if a gateway callback has not arrived within this window, the
+    # backend queries the gateway directly instead of leaving the order pending.
+    callback-timeout-seconds: ${APP_PAYMENT_CALLBACK_TIMEOUT:45}
+    reconcile-interval-ms: 30000
+
+logging:
+  level:
+    com.isha.grocery: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: postgres
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/grocerydb}
+    driver-class-name: org.postgresql.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:grocery}
+    password: ${SPRING_DATASOURCE_PASSWORD:grocery}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  h2:
+    console:
+      enabled: false
